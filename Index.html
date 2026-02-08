@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>SheetRoots</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      color: #00d4ff;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+
+    .input-section {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .input-field {
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: 2px solid #334155;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      width: 350px;
+      max-width: 100%;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: #00d4ff;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #00d4ff;
+      color: #1a1a2e;
+    }
+
+    .btn:hover {
+      background: #00b8e6;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 15px 0;
+      display: none;
+    }
+
+    .metadata-panel {
+      display: none;
+      justify-content: center;
+      gap: 20px;
+      margin: 15px 0;
+    }
+
+    .metadata-item {
+      text-align: center;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+
+    .metadata-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #00d4ff;
+    }
+
+    .metadata-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .graph-container {
+      width: 100%;
+      height: 450px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      border: 1px solid #334155;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .loading,
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #64748b;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #334155;
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .graph-svg {
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>🌳 SheetRoots</h1>
+      <p>スプレッドシートの依存関係を可視化</p>
+    </header>
+
+    <div class="input-section">
+      <input type="text" id="inputField" class="input-field" placeholder="スプレッドシートID または URL">
+      <button id="analyzeBtn" class="btn">解析する</button>
+    </div>
+
+    <div id="errorBox" class="error-message"></div>
+
+    <div id="metaPanel" class="metadata-panel">
+      <div class="metadata-item">
+        <div id="sheetNum" class="metadata-value">0</div>
+        <div class="metadata-label">シート数</div>
+      </div>
+      <div class="metadata-item">
+        <div id="extNum" class="metadata-value">0</div>
+        <div class="metadata-label">外部参照</div>
+      </div>
+    </div>
+
+    <div id="graphBox" class="graph-container">
+      <div id="emptyBox" class="empty-state">
+        <div style="font-size: 3rem; margin-bottom: 10px;">📊</div>
+        <p>スプレッドシートIDを入力して解析を開始</p>
+      </div>
+      <div id="loadBox" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <span>解析中...</span>
+      </div>
+      <svg id="svgGraph" class="graph-svg">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#059669" />
+            <stop offset="100%" style="stop-color:#10b981" />
+          </linearGradient>
+          <marker id="arrow1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" />
+          </marker>
+          <marker id="arrow2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" />
+          </marker>
+          <marker id="arrow3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#a855f7" />
+          </marker>
+        </defs>
+        <g id="edges"></g>
+        <g id="nodes"></g>
+      </svg>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: linear-gradient(135deg, #059669, #10b981);"></div>
+        <span>メイン</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #3b82f6;"></div>
+        <span>シート</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #a855f7;"></div>
+        <span>外部 (IMPORTRANGE)</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var inputField = document.getElementById('inputField');
+      var analyzeBtn = document.getElementById('analyzeBtn');
+      var errorBox = document.getElementById('errorBox');
+      var metaPanel = document.getElementById('metaPanel');
+      var sheetNum = document.getElementById('sheetNum');
+      var extNum = document.getElementById('extNum');
+      var emptyBox = document.getElementById('emptyBox');
+      var loadBox = document.getElementById('loadBox');
+      var svgGraph = document.getElementById('svgGraph');
+      var nodesG = document.getElementById('nodes');
+      var edgesG = document.getElementById('edges');
+
+      var currentData = null;
+
+      function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+      }
+
+      function hideError() {
+        errorBox.style.display = 'none';
+      }
+
+      function setLoading(on) {
+        if (on) {
+          emptyBox.style.display = 'none';
+          svgGraph.style.display = 'none';
+          loadBox.style.display = 'flex';
+          analyzeBtn.disabled = true;
+          analyzeBtn.textContent = '解析中...';
+        } else {
+          loadBox.style.display = 'none';
+          analyzeBtn.disabled = false;
+          analyzeBtn.textContent = '解析する';
+        }
+      }
+
+      function drawGraph(data) {
+        nodesG.innerHTML = '';
+        edgesG.innerHTML = '';
+
+        var rect = svgGraph.getBoundingClientRect();
+        var w = rect.width || 800;
+        var h = rect.height || 450;
+        var cx = w / 2;
+        var cy = h / 2;
+
+        var pos = {};
+        var sheetNodes = [];
+        var extNodes = [];
+
+        for (var i = 0; i < data.nodes.length; i++) {
+          var n = data.nodes[i];
+          if (n.type === 'spreadsheet') {
+            pos[n.id] = { x: cx, y: cy };
+          } else if (n.type === 'sheet') {
+            sheetNodes.push(n);
+          } else {
+            extNodes.push(n);
+          }
+        }
+
+        for (var j = 0; j < sheetNodes.length; j++) {
+          var angle = (2 * Math.PI * j) / sheetNodes.length - Math.PI / 2;
+          pos[sheetNodes[j].id] = {
+            x: cx + 130 * Math.cos(angle),
+            y: cy + 130 * Math.sin(angle)
+          };
+        }
+
+        for (var k = 0; k < extNodes.length; k++) {
+          var angle2 = (2 * Math.PI * k) / (extNodes.length || 1) + Math.PI / 4;
+          pos[extNodes[k].id] = {
+            x: cx + 250 * Math.cos(angle2),
+            y: cy + 200 * Math.sin(angle2)
+          };
+        }
+
+        // Draw edges
+        for (var e = 0; e < data.edges.length; e++) {
+          var edge = data.edges[e];
+          var p1 = pos[edge.source];
+          var p2 = pos[edge.target];
+          if (!p1 || !p2) continue;
+
+          var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', p1.x);
+          line.setAttribute('y1', p1.y);
+          line.setAttribute('x2', p2.x);
+          line.setAttribute('y2', p2.y);
+          line.setAttribute('stroke', edge.type === 'importRange' ? '#a855f7' : edge.type === 'internalRef' ? '#3b82f6' : '#94a3b8');
+          line.setAttribute('stroke-width', edge.type === 'internal' ? '1' : '2');
+          if (edge.type !== 'internal') {
+            line.setAttribute('stroke-dasharray', '5,5');
+          }
+          line.setAttribute('marker-end', edge.type === 'importRange' ? 'url(#arrow3)' : edge.type === 'internalRef' ? 'url(#arrow2)' : 'url(#arrow1)');
+          edgesG.appendChild(line);
+        }
+
+        // Draw nodes
+        for (var m = 0; m < data.nodes.length; m++) {
+          var node = data.nodes[m];
+          var p = pos[node.id];
+          if (!p) continue;
+
+          var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          g.setAttribute('transform', 'translate(' + p.x + ',' + p.y + ')');
+
+          var label = node.data.label || '';
+          if (label.length > 12) label = label.substring(0, 12) + '...';
+          var rw = Math.max(80, label.length * 7 + 20);
+          var rh = 30;
+
+          var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', -rw / 2);
+          rect.setAttribute('y', -rh / 2);
+          rect.setAttribute('width', rw);
+          rect.setAttribute('height', rh);
+          rect.setAttribute('rx', '6');
+          rect.setAttribute('ry', '6');
+          rect.setAttribute('fill', node.type === 'spreadsheet' ? 'url(#grad1)' : node.type === 'sheet' ? '#3b82f6' : '#a855f7');
+          rect.setAttribute('stroke', node.type === 'spreadsheet' ? '#34d399' : node.type === 'sheet' ? '#60a5fa' : '#c084fc');
+          rect.setAttribute('stroke-width', '2');
+
+          var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('fill', 'white');
+          text.setAttribute('font-size', '11');
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('dominant-baseline', 'middle');
+          text.textContent = label;
+
+          g.appendChild(rect);
+          g.appendChild(text);
+          nodesG.appendChild(g);
+        }
+
+        emptyBox.style.display = 'none';
+        svgGraph.style.display = 'block';
+      }
+
+      function runAnalysis() {
+        var val = inputField.value.trim();
+        if (!val) {
+          showError('スプレッドシートIDまたはURLを入力してください');
+          return;
+        }
+
+        hideError();
+        setLoading(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setLoading(false);
+            if (result && result.success) {
+              currentData = result.data;
+              metaPanel.style.display = 'flex';
+              sheetNum.textContent = result.data.metadata.sheetCount;
+              extNum.textContent = result.data.metadata.externalCount;
+              drawGraph(result.data);
+            } else {
+              showError(result ? result.error : '不明なエラー');
+            }
+          })
+          .withFailureHandler(function (err) {
+            setLoading(false);
+            showError('エラー: ' + (err.message || err));
+          })
+          .analyzeSpreadsheet(val);
+      }
+
+      analyzeBtn.onclick = runAnalysis;
+      inputField.onkeypress = function (e) {
+        if (e.key === 'Enter') runAnalysis();
+      };
+
+      window.onresize = function () {
+        if (currentData) drawGraph(currentData);
+      };
+    })();
+  </script>
+</body>
+
+</html>

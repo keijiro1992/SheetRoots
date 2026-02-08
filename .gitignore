@@ -1,0 +1,16 @@
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+
+# clasp credentials (contains script ID)
+.clasp.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
