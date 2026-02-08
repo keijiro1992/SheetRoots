@@ -10,7 +10,6 @@ function doGet(e) {
   var html = HtmlService.createHtmlOutputFromFile('Index');
   html.setTitle('SheetRoots - 依存関係ビューア');
   html.addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  // サンドボックスモードを明示的に設定
   html.setSandboxMode(HtmlService.SandboxMode.IFRAME);
   return html;
 }
@@ -24,28 +23,27 @@ function analyzeSpreadsheet(spreadsheetInput) {
   try {
     var spreadsheetId = extractSpreadsheetId(spreadsheetInput);
     if (!spreadsheetId) {
-      return {
-        success: false,
-        error: '無効なスプレッドシートID/URLです'
-      };
+      return { success: false, error: '無効なスプレッドシートID/URLです' };
     }
 
     var ss = SpreadsheetApp.openById(spreadsheetId);
     var sheets = ss.getSheets();
     var ssName = ss.getName();
 
-    // ノードとエッジを生成
     var nodes = [];
     var edges = [];
-    var externalSpreadsheets = {}; // 外部参照の重複管理
+    var externalSpreadsheets = {};
+    var allSheetFormulas = {}; // シートごとの数式リスト
+    var brokenRefs = []; // 壊れた参照
 
-    // 中央ノード（現在のスプレッドシート）
+    // 中央ノード
     nodes.push({
       id: spreadsheetId,
       type: 'spreadsheet',
       data: { 
         label: ssName,
-        sheetCount: sheets.length
+        sheetCount: sheets.length,
+        formulas: []
       }
     });
 
@@ -55,11 +53,78 @@ function analyzeSpreadsheet(spreadsheetInput) {
       var sheetName = sheet.getName();
       var sheetId = spreadsheetId + '_' + sheetName;
       
+      var sheetFormulas = [];
+      var internalRefs = {};
+      var externalRefs = {};
+      var hasError = false;
+
+      // 数式と値を取得
+      var dataRange = sheet.getDataRange();
+      var formulas = dataRange.getFormulas();
+      var values = dataRange.getValues();
+
+      for (var row = 0; row < formulas.length; row++) {
+        for (var col = 0; col < formulas[row].length; col++) {
+          var formula = formulas[row][col];
+          if (formula) {
+            var cellAddr = columnToLetter(col + 1) + (row + 1);
+            var cellValue = values[row][col];
+            var deps = parseDependencies(formula, sheetName);
+            
+            // 壊れた参照チェック
+            var isBroken = false;
+            if (typeof cellValue === 'string' && 
+                (cellValue.indexOf('#REF!') !== -1 || 
+                 cellValue.indexOf('#ERROR!') !== -1 ||
+                 cellValue.indexOf('#N/A') !== -1)) {
+              isBroken = true;
+              hasError = true;
+              brokenRefs.push({
+                sheet: sheetName,
+                cell: cellAddr,
+                formula: formula,
+                error: cellValue
+              });
+            }
+
+            // 数式情報を記録
+            var refList = [];
+            for (var j = 0; j < deps.internal.length; j++) {
+              refList.push(deps.internal[j]);
+              internalRefs[deps.internal[j]] = true;
+            }
+            for (var k = 0; k < deps.externalIds.length; k++) {
+              var ext = deps.externalIds[k];
+              refList.push('EXT:' + ext.id);
+              if (!externalRefs[ext.id]) {
+                externalRefs[ext.id] = ext;
+              }
+            }
+
+            sheetFormulas.push({
+              cell: cellAddr,
+              formula: formula,
+              refs: refList,
+              isBroken: isBroken,
+              error: isBroken ? cellValue : null
+            });
+          }
+        }
+      }
+
+      allSheetFormulas[sheetId] = sheetFormulas;
+
       // シートノードを追加
       nodes.push({
         id: sheetId,
         type: 'sheet',
-        data: { label: sheetName }
+        data: { 
+          label: sheetName,
+          formulas: sheetFormulas,
+          formulaCount: sheetFormulas.length,
+          hasError: hasError,
+          referencedBy: [] // 後で計算
+        }
       });
 
       // スプレッドシート→シートのエッジ
@@ -69,34 +134,6 @@ function analyzeSpreadsheet(spreadsheetInput) {
         target: sheetId,
         type: 'internal'
       });
-
-      // 数式を取得して解析
-      var dataRange = sheet.getDataRange();
-      var formulas = dataRange.getFormulas();
-      var internalRefs = {};
-      var externalRefs = {};
-
-      for (var row = 0; row < formulas.length; row++) {
-        for (var col = 0; col < formulas[row].length; col++) {
-          var formula = formulas[row][col];
-          if (formula) {
-            var deps = parseDependencies(formula, sheetName);
-            
-            // 内部参照
-            for (var j = 0; j < deps.internal.length; j++) {
-              internalRefs[deps.internal[j]] = true;
-            }
-            
-            // 外部参照
-            for (var k = 0; k < deps.externalIds.length; k++) {
-              var ext = deps.externalIds[k];
-              if (!externalRefs[ext.id]) {
-                externalRefs[ext.id] = ext;
-              }
-            }
-          }
-        }
-      }
 
       // 内部シート間のエッジ
       for (var targetSheet in internalRefs) {
@@ -111,27 +148,30 @@ function analyzeSpreadsheet(spreadsheetInput) {
 
       // 外部参照のエッジ
       for (var extId in externalRefs) {
-        var ext = externalRefs[extId];
+        var extRef = externalRefs[extId];
         
         if (!externalSpreadsheets[extId]) {
-          // 外部スプレッドシートの情報を取得（可能な場合）
           var extName = extId;
+          var extHasAccess = false;
           try {
             var extSs = SpreadsheetApp.openById(extId);
             extName = extSs.getName();
+            extHasAccess = true;
           } catch (e) {
-            // アクセス権がない場合はIDのまま
+            // アクセス権なし
           }
           
-          externalSpreadsheets[extId] = extName;
+          externalSpreadsheets[extId] = { name: extName, hasAccess: extHasAccess };
           
-          // 外部ノードを追加
           nodes.push({
             id: extId,
             type: 'external',
             data: { 
               label: extName,
-              hasAccess: extName !== extId
+              hasAccess: extHasAccess,
+              hasError: !extHasAccess,
+              formulas: [],
+              referencedBy: []
             }
           });
         }
@@ -141,8 +181,28 @@ function analyzeSpreadsheet(spreadsheetInput) {
           source: extId,
           target: sheetId,
           type: 'importRange',
-          label: ext.range
+          label: extRef.range
         });
+      }
+    }
+
+    // 逆依存の計算 (referencedBy)
+    for (var e = 0; e < edges.length; e++) {
+      var edge = edges[e];
+      if (edge.type === 'internalRef' || edge.type === 'importRange') {
+        // targetノードを探して、sourceを追加
+        for (var n = 0; n < nodes.length; n++) {
+          if (nodes[n].id === edge.target) {
+            if (!nodes[n].data.referencedBy) {
+              nodes[n].data.referencedBy = [];
+            }
+            var sourceLabel = findNodeLabel(nodes, edge.source);
+            if (nodes[n].data.referencedBy.indexOf(sourceLabel) === -1) {
+              nodes[n].data.referencedBy.push(sourceLabel);
+            }
+            break;
+          }
+        }
       }
     }
 
@@ -156,21 +216,45 @@ function analyzeSpreadsheet(spreadsheetInput) {
       data: {
         nodes: nodes,
         edges: edges,
+        brokenRefs: brokenRefs,
         metadata: {
           spreadsheetName: ssName,
           spreadsheetId: spreadsheetId,
           sheetCount: sheets.length,
-          externalCount: externalCount
+          externalCount: externalCount,
+          brokenCount: brokenRefs.length
         }
       }
     };
 
   } catch (error) {
-    return {
-      success: false,
-      error: error.toString()
-    };
+    return { success: false, error: error.toString() };
   }
+}
+
+/**
+ * ノードIDからラベルを検索
+ */
+function findNodeLabel(nodes, nodeId) {
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i].id === nodeId) {
+      return nodes[i].data.label;
+    }
+  }
+  return nodeId;
+}
+
+/**
+ * 列番号をアルファベットに変換
+ */
+function columnToLetter(column) {
+  var letter = '';
+  while (column > 0) {
+    var temp = (column - 1) % 26;
+    letter = String.fromCharCode(temp + 65) + letter;
+    column = Math.floor((column - temp - 1) / 26);
+  }
+  return letter;
 }
 
 /**

@@ -17,47 +17,56 @@
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       min-height: 100vh;
       color: #fff;
+      display: flex;
+    }
+
+    .main-area {
+      flex: 1;
       padding: 20px;
+      transition: margin-right 0.3s;
+    }
+
+    .main-area.panel-open {
+      margin-right: 350px;
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 900px;
       margin: 0 auto;
     }
 
     .header {
       text-align: center;
-      padding: 30px 20px;
+      padding: 20px;
     }
 
     .header h1 {
-      font-size: 2rem;
+      font-size: 1.8rem;
       color: #00d4ff;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .header p {
       color: #94a3b8;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
 
     .input-section {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin: 20px 0;
+      margin: 15px 0;
       flex-wrap: wrap;
     }
 
     .input-field {
-      padding: 12px 16px;
-      font-size: 1rem;
+      padding: 10px 14px;
+      font-size: 0.95rem;
       border: 2px solid #334155;
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.08);
       color: #fff;
-      width: 350px;
-      max-width: 100%;
+      width: 320px;
     }
 
     .input-field:focus {
@@ -66,8 +75,8 @@
     }
 
     .btn {
-      padding: 12px 24px;
-      font-size: 1rem;
+      padding: 10px 20px;
+      font-size: 0.95rem;
       font-weight: 600;
       border: none;
       border-radius: 8px;
@@ -89,42 +98,47 @@
       background: rgba(239, 68, 68, 0.2);
       border: 1px solid #ef4444;
       color: #fca5a5;
-      padding: 12px;
+      padding: 10px;
       border-radius: 8px;
       text-align: center;
-      margin: 15px 0;
+      margin: 10px 0;
       display: none;
     }
 
-    .metadata-panel {
+    .stats-panel {
       display: none;
       justify-content: center;
-      gap: 20px;
-      margin: 15px 0;
+      gap: 15px;
+      margin: 12px 0;
+      flex-wrap: wrap;
     }
 
-    .metadata-item {
+    .stat-item {
       text-align: center;
-      padding: 12px 20px;
+      padding: 10px 18px;
       background: rgba(255, 255, 255, 0.05);
       border-radius: 8px;
     }
 
-    .metadata-value {
-      font-size: 1.5rem;
+    .stat-value {
+      font-size: 1.4rem;
       font-weight: 700;
       color: #00d4ff;
     }
 
-    .metadata-label {
-      font-size: 0.8rem;
+    .stat-value.error {
+      color: #ef4444;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
       color: #94a3b8;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .graph-container {
       width: 100%;
-      height: 450px;
+      height: 400px;
       background: rgba(255, 255, 255, 0.03);
       border-radius: 12px;
       border: 1px solid #334155;
@@ -143,13 +157,13 @@
     }
 
     .spinner {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border: 3px solid #334155;
       border-top-color: #00d4ff;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     @keyframes spin {
@@ -167,96 +181,242 @@
     .legend {
       display: flex;
       justify-content: center;
-      gap: 15px;
-      margin-top: 12px;
+      gap: 12px;
+      margin-top: 10px;
       flex-wrap: wrap;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.8rem;
+      gap: 5px;
+      font-size: 0.75rem;
       color: #94a3b8;
     }
 
     .legend-color {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border-radius: 3px;
+    }
+
+    /* Side Panel */
+    .side-panel {
+      position: fixed;
+      top: 0;
+      right: -360px;
+      width: 350px;
+      height: 100vh;
+      background: #1e293b;
+      border-left: 1px solid #334155;
+      padding: 20px;
+      overflow-y: auto;
+      transition: right 0.3s;
+      z-index: 100;
+    }
+
+    .side-panel.open {
+      right: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .panel-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .panel-close:hover {
+      color: #fff;
+    }
+
+    .panel-section {
+      margin-bottom: 20px;
+    }
+
+    .panel-section-title {
+      font-size: 0.8rem;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .panel-info {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .panel-info-label {
+      font-size: 0.7rem;
+      color: #64748b;
+    }
+
+    .panel-info-value {
+      font-size: 0.9rem;
+      color: #fff;
+      word-break: break-all;
+    }
+
+    .formula-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .formula-item {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+      border-left: 3px solid #3b82f6;
+    }
+
+    .formula-item.broken {
+      border-left-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .formula-cell {
+      color: #00d4ff;
+      font-weight: 600;
+    }
+
+    .formula-text {
+      color: #94a3b8;
+      word-break: break-all;
+      margin-top: 4px;
+      font-family: monospace;
+      font-size: 0.75rem;
+    }
+
+    .formula-error {
+      color: #ef4444;
+      font-size: 0.7rem;
+      margin-top: 2px;
+    }
+
+    .ref-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .ref-tag {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+
+    .ref-tag.external {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+    }
+
+    .no-data {
+      color: #64748b;
+      font-size: 0.85rem;
+      font-style: italic;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <header class="header">
-      <h1>🌳 SheetRoots</h1>
-      <p>スプレッドシートの依存関係を可視化</p>
-    </header>
-
-    <div class="input-section">
-      <input type="text" id="inputField" class="input-field" placeholder="スプレッドシートID または URL">
-      <button id="analyzeBtn" class="btn">解析する</button>
+  <div class="main-area" id="mainArea">
+    <div class="container">
+      <header class="header">
+        <h1>🌳 SheetRoots</h1>
+        <p>スプレッドシートの依存関係を可視化</p>
+      </header>
+      <div class="input-section">
+        <input type="text" id="inputField" class="input-field" placeholder="スプレッドシートID または URL">
+        <button id="analyzeBtn" class="btn">解析する</button>
+      </div>
+      <div id="errorBox" class="error-message"></div>
+      <div id="statsPanel" class="stats-panel">
+        <div class="stat-item">
+          <div id="sheetNum" class="stat-value">0</div>
+          <div class="stat-label">シート</div>
+        </div>
+        <div class="stat-item">
+          <div id="extNum" class="stat-value">0</div>
+          <div class="stat-label">外部参照</div>
+        </div>
+        <div class="stat-item">
+          <div id="brokenNum" class="stat-value error">0</div>
+          <div class="stat-label">エラー</div>
+        </div>
+      </div>
+      <div id="graphBox" class="graph-container">
+        <div id="emptyBox" class="empty-state">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">📊</div>
+          <p>スプレッドシートIDを入力して解析を開始</p>
+        </div>
+        <div id="loadBox" class="loading" style="display: none;">
+          <div class="spinner"></div><span>解析中...</span>
+        </div>
+        <svg id="svgGraph" class="graph-svg">
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#059669" />
+              <stop offset="100%" style="stop-color:#10b981" />
+            </linearGradient>
+            <marker id="arrow1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" />
+            </marker>
+            <marker id="arrow2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" />
+            </marker>
+            <marker id="arrow3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#a855f7" />
+            </marker>
+          </defs>
+          <g id="edges"></g>
+          <g id="nodes"></g>
+        </svg>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, #059669, #10b981);"></div>
+          <span>メイン</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #3b82f6;"></div><span>シート</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #a855f7;"></div><span>外部</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #ef4444;"></div><span>エラー</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div id="errorBox" class="error-message"></div>
-
-    <div id="metaPanel" class="metadata-panel">
-      <div class="metadata-item">
-        <div id="sheetNum" class="metadata-value">0</div>
-        <div class="metadata-label">シート数</div>
-      </div>
-      <div class="metadata-item">
-        <div id="extNum" class="metadata-value">0</div>
-        <div class="metadata-label">外部参照</div>
-      </div>
+  <!-- Side Panel -->
+  <div id="sidePanel" class="side-panel">
+    <div class="panel-header">
+      <span class="panel-title" id="panelTitle">詳細</span>
+      <button class="panel-close" id="panelClose">&times;</button>
     </div>
-
-    <div id="graphBox" class="graph-container">
-      <div id="emptyBox" class="empty-state">
-        <div style="font-size: 3rem; margin-bottom: 10px;">📊</div>
-        <p>スプレッドシートIDを入力して解析を開始</p>
-      </div>
-      <div id="loadBox" class="loading" style="display: none;">
-        <div class="spinner"></div>
-        <span>解析中...</span>
-      </div>
-      <svg id="svgGraph" class="graph-svg">
-        <defs>
-          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#059669" />
-            <stop offset="100%" style="stop-color:#10b981" />
-          </linearGradient>
-          <marker id="arrow1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-            <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" />
-          </marker>
-          <marker id="arrow2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-            <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" />
-          </marker>
-          <marker id="arrow3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-            <polygon points="0 0, 8 3, 0 6" fill="#a855f7" />
-          </marker>
-        </defs>
-        <g id="edges"></g>
-        <g id="nodes"></g>
-      </svg>
-    </div>
-
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-color" style="background: linear-gradient(135deg, #059669, #10b981);"></div>
-        <span>メイン</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #3b82f6;"></div>
-        <span>シート</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #a855f7;"></div>
-        <span>外部 (IMPORTRANGE)</span>
-      </div>
-    </div>
+    <div id="panelContent"></div>
   </div>
 
   <script>
@@ -264,25 +424,26 @@
       var inputField = document.getElementById('inputField');
       var analyzeBtn = document.getElementById('analyzeBtn');
       var errorBox = document.getElementById('errorBox');
-      var metaPanel = document.getElementById('metaPanel');
+      var statsPanel = document.getElementById('statsPanel');
       var sheetNum = document.getElementById('sheetNum');
       var extNum = document.getElementById('extNum');
+      var brokenNum = document.getElementById('brokenNum');
       var emptyBox = document.getElementById('emptyBox');
       var loadBox = document.getElementById('loadBox');
       var svgGraph = document.getElementById('svgGraph');
       var nodesG = document.getElementById('nodes');
       var edgesG = document.getElementById('edges');
+      var mainArea = document.getElementById('mainArea');
+      var sidePanel = document.getElementById('sidePanel');
+      var panelTitle = document.getElementById('panelTitle');
+      var panelContent = document.getElementById('panelContent');
+      var panelClose = document.getElementById('panelClose');
 
       var currentData = null;
+      var nodePositions = {};
 
-      function showError(msg) {
-        errorBox.textContent = msg;
-        errorBox.style.display = 'block';
-      }
-
-      function hideError() {
-        errorBox.style.display = 'none';
-      }
+      function showError(msg) { errorBox.textContent = msg; errorBox.style.display = 'block'; }
+      function hideError() { errorBox.style.display = 'none'; }
 
       function setLoading(on) {
         if (on) {
@@ -298,24 +459,103 @@
         }
       }
 
+      function openPanel(node) {
+        panelTitle.textContent = node.data.label;
+        var html = '';
+
+        // 基本情報
+        html += '<div class="panel-section">';
+        html += '<div class="panel-section-title">タイプ</div>';
+        html += '<div class="panel-info"><div class="panel-info-value">' +
+          (node.type === 'spreadsheet' ? 'スプレッドシート' :
+            node.type === 'sheet' ? 'シート' : '外部参照') + '</div></div>';
+        html += '</div>';
+
+        // エラー状態
+        if (node.data.hasError) {
+          html += '<div class="panel-section">';
+          html += '<div class="panel-info" style="border-left: 3px solid #ef4444;">';
+          html += '<div class="panel-info-value" style="color: #ef4444;">⚠️ エラーあり</div></div>';
+          html += '</div>';
+        }
+
+        // 逆依存（このノードを参照しているシート）
+        if (node.data.referencedBy && node.data.referencedBy.length > 0) {
+          html += '<div class="panel-section">';
+          html += '<div class="panel-section-title">参照されている（逆依存）</div>';
+          html += '<div class="ref-list">';
+          for (var i = 0; i < node.data.referencedBy.length; i++) {
+            html += '<span class="ref-tag">' + node.data.referencedBy[i] + '</span>';
+          }
+          html += '</div></div>';
+        }
+
+        // 数式一覧
+        if (node.data.formulas && node.data.formulas.length > 0) {
+          html += '<div class="panel-section">';
+          html += '<div class="panel-section-title">数式一覧 (' + node.data.formulas.length + ')</div>';
+          html += '<div class="formula-list">';
+          var maxShow = Math.min(node.data.formulas.length, 50);
+          for (var j = 0; j < maxShow; j++) {
+            var f = node.data.formulas[j];
+            html += '<div class="formula-item' + (f.isBroken ? ' broken' : '') + '">';
+            html += '<span class="formula-cell">' + f.cell + '</span>';
+            html += '<div class="formula-text">' + escapeHtml(f.formula) + '</div>';
+            if (f.isBroken) {
+              html += '<div class="formula-error">エラー: ' + escapeHtml(f.error) + '</div>';
+            }
+            if (f.refs && f.refs.length > 0) {
+              html += '<div class="ref-list" style="margin-top:4px;">';
+              for (var r = 0; r < f.refs.length; r++) {
+                var isExt = f.refs[r].indexOf('EXT:') === 0;
+                html += '<span class="ref-tag' + (isExt ? ' external' : '') + '">' +
+                  f.refs[r].replace('EXT:', '') + '</span>';
+              }
+              html += '</div>';
+            }
+            html += '</div>';
+          }
+          if (node.data.formulas.length > maxShow) {
+            html += '<div class="no-data">... 他 ' + (node.data.formulas.length - maxShow) + ' 件</div>';
+          }
+          html += '</div></div>';
+        } else if (node.type === 'sheet') {
+          html += '<div class="panel-section"><div class="no-data">数式なし</div></div>';
+        }
+
+        panelContent.innerHTML = html;
+        sidePanel.classList.add('open');
+        mainArea.classList.add('panel-open');
+      }
+
+      function closePanel() {
+        sidePanel.classList.remove('open');
+        mainArea.classList.remove('panel-open');
+      }
+
+      function escapeHtml(text) {
+        if (!text) return '';
+        return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
       function drawGraph(data) {
         nodesG.innerHTML = '';
         edgesG.innerHTML = '';
+        nodePositions = {};
 
         var rect = svgGraph.getBoundingClientRect();
         var w = rect.width || 800;
-        var h = rect.height || 450;
+        var h = rect.height || 400;
         var cx = w / 2;
         var cy = h / 2;
 
-        var pos = {};
         var sheetNodes = [];
         var extNodes = [];
 
         for (var i = 0; i < data.nodes.length; i++) {
           var n = data.nodes[i];
           if (n.type === 'spreadsheet') {
-            pos[n.id] = { x: cx, y: cy };
+            nodePositions[n.id] = { x: cx, y: cy };
           } else if (n.type === 'sheet') {
             sheetNodes.push(n);
           } else {
@@ -325,25 +565,19 @@
 
         for (var j = 0; j < sheetNodes.length; j++) {
           var angle = (2 * Math.PI * j) / sheetNodes.length - Math.PI / 2;
-          pos[sheetNodes[j].id] = {
-            x: cx + 130 * Math.cos(angle),
-            y: cy + 130 * Math.sin(angle)
-          };
+          nodePositions[sheetNodes[j].id] = { x: cx + 120 * Math.cos(angle), y: cy + 110 * Math.sin(angle) };
         }
 
         for (var k = 0; k < extNodes.length; k++) {
           var angle2 = (2 * Math.PI * k) / (extNodes.length || 1) + Math.PI / 4;
-          pos[extNodes[k].id] = {
-            x: cx + 250 * Math.cos(angle2),
-            y: cy + 200 * Math.sin(angle2)
-          };
+          nodePositions[extNodes[k].id] = { x: cx + 220 * Math.cos(angle2), y: cy + 170 * Math.sin(angle2) };
         }
 
         // Draw edges
         for (var e = 0; e < data.edges.length; e++) {
           var edge = data.edges[e];
-          var p1 = pos[edge.source];
-          var p2 = pos[edge.target];
+          var p1 = nodePositions[edge.source];
+          var p2 = nodePositions[edge.target];
           if (!p1 || !p2) continue;
 
           var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -353,9 +587,7 @@
           line.setAttribute('y2', p2.y);
           line.setAttribute('stroke', edge.type === 'importRange' ? '#a855f7' : edge.type === 'internalRef' ? '#3b82f6' : '#94a3b8');
           line.setAttribute('stroke-width', edge.type === 'internal' ? '1' : '2');
-          if (edge.type !== 'internal') {
-            line.setAttribute('stroke-dasharray', '5,5');
-          }
+          if (edge.type !== 'internal') line.setAttribute('stroke-dasharray', '5,5');
           line.setAttribute('marker-end', edge.type === 'importRange' ? 'url(#arrow3)' : edge.type === 'internalRef' ? 'url(#arrow2)' : 'url(#arrow1)');
           edgesG.appendChild(line);
         }
@@ -363,37 +595,58 @@
         // Draw nodes
         for (var m = 0; m < data.nodes.length; m++) {
           var node = data.nodes[m];
-          var p = pos[node.id];
+          var p = nodePositions[node.id];
           if (!p) continue;
 
           var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
           g.setAttribute('transform', 'translate(' + p.x + ',' + p.y + ')');
+          g.setAttribute('style', 'cursor: pointer;');
+          g.setAttribute('data-node-id', node.id);
 
           var label = node.data.label || '';
-          if (label.length > 12) label = label.substring(0, 12) + '...';
-          var rw = Math.max(80, label.length * 7 + 20);
-          var rh = 30;
+          if (label.length > 10) label = label.substring(0, 10) + '...';
+          var rw = Math.max(70, label.length * 7 + 16);
+          var rh = 28;
 
-          var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          rect.setAttribute('x', -rw / 2);
-          rect.setAttribute('y', -rh / 2);
-          rect.setAttribute('width', rw);
-          rect.setAttribute('height', rh);
-          rect.setAttribute('rx', '6');
-          rect.setAttribute('ry', '6');
-          rect.setAttribute('fill', node.type === 'spreadsheet' ? 'url(#grad1)' : node.type === 'sheet' ? '#3b82f6' : '#a855f7');
-          rect.setAttribute('stroke', node.type === 'spreadsheet' ? '#34d399' : node.type === 'sheet' ? '#60a5fa' : '#c084fc');
-          rect.setAttribute('stroke-width', '2');
+          var rectEl = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rectEl.setAttribute('x', -rw / 2);
+          rectEl.setAttribute('y', -rh / 2);
+          rectEl.setAttribute('width', rw);
+          rectEl.setAttribute('height', rh);
+          rectEl.setAttribute('rx', '6');
+          rectEl.setAttribute('ry', '6');
+
+          var fillColor = node.type === 'spreadsheet' ? 'url(#grad1)' : node.type === 'sheet' ? '#3b82f6' : '#a855f7';
+          var strokeColor = node.type === 'spreadsheet' ? '#34d399' : node.type === 'sheet' ? '#60a5fa' : '#c084fc';
+
+          // エラーノードは赤枠
+          if (node.data.hasError) {
+            strokeColor = '#ef4444';
+            rectEl.setAttribute('stroke-width', '3');
+          } else {
+            rectEl.setAttribute('stroke-width', '2');
+          }
+
+          rectEl.setAttribute('fill', fillColor);
+          rectEl.setAttribute('stroke', strokeColor);
 
           var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           text.setAttribute('fill', 'white');
-          text.setAttribute('font-size', '11');
+          text.setAttribute('font-size', '10');
           text.setAttribute('text-anchor', 'middle');
           text.setAttribute('dominant-baseline', 'middle');
           text.textContent = label;
 
-          g.appendChild(rect);
+          g.appendChild(rectEl);
           g.appendChild(text);
+
+          // クリックイベント
+          (function (nodeData) {
+            g.addEventListener('click', function () {
+              openPanel(nodeData);
+            });
+          })(node);
+
           nodesG.appendChild(g);
         }
 
@@ -403,12 +656,10 @@
 
       function runAnalysis() {
         var val = inputField.value.trim();
-        if (!val) {
-          showError('スプレッドシートIDまたはURLを入力してください');
-          return;
-        }
+        if (!val) { showError('スプレッドシートIDまたはURLを入力してください'); return; }
 
         hideError();
+        closePanel();
         setLoading(true);
 
         google.script.run
@@ -416,9 +667,10 @@
             setLoading(false);
             if (result && result.success) {
               currentData = result.data;
-              metaPanel.style.display = 'flex';
+              statsPanel.style.display = 'flex';
               sheetNum.textContent = result.data.metadata.sheetCount;
               extNum.textContent = result.data.metadata.externalCount;
+              brokenNum.textContent = result.data.metadata.brokenCount || 0;
               drawGraph(result.data);
             } else {
               showError(result ? result.error : '不明なエラー');
@@ -432,13 +684,10 @@
       }
 
       analyzeBtn.onclick = runAnalysis;
-      inputField.onkeypress = function (e) {
-        if (e.key === 'Enter') runAnalysis();
-      };
+      inputField.onkeypress = function (e) { if (e.key === 'Enter') runAnalysis(); };
+      panelClose.onclick = closePanel;
 
-      window.onresize = function () {
-        if (currentData) drawGraph(currentData);
-      };
+      window.onresize = function () { if (currentData) drawGraph(currentData); };
     })();
   </script>
 </body>
